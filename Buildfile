@@ -7,7 +7,6 @@ target_server(){
 }
 
 target_client(){
-   pwd
    require_command docker
    change_dir src/client/
    exec docker build -t client .

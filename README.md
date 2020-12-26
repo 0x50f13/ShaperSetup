@@ -1,9 +1,11 @@
 # Networks HW-2
 <i> Networks at FCS Homework-2 </i>
 ## Requirements
+* POSIX-compitiable operating system
 * docker
 * docker-compose
 * bash>=3.2
+* tput
 ## Building & runing
 ### Automatic
 Automatic build only was tested on Mac OS X(10.15.7).<br>
