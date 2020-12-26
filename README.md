@@ -25,3 +25,5 @@ cd ../..
 docker-compose up
 ```
 
+### License
+Licensed under GNU/GPL 3.0 since open-source compenents are used from [ddos2](https://github.com/Andrewerr/ddos2).
