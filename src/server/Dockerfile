@@ -2,7 +2,7 @@ FROM alpine:3.7
 FROM andrewerr/meowmeow-beta:latest
 SHELL ["/bin/sh", "-c"]
 RUN export PATH=$PATH:/bin/:/sbin/:/usr/sbin/:/usr/bin/
-RUN /sbin/apk add --no-cache "bash" iftop iptables ncurses iproute2
+RUN /sbin/apk add --no-cache nload "bash" iftop iptables ncurses iproute2
 COPY build.sh build.sh
 COPY Buildfile Buildfile
 RUN  chmod 755 build.sh
