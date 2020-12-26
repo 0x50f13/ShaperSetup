@@ -1,0 +1,40 @@
+version: '3'
+services:
+    server:
+      image: server
+      container_name: server-container
+      cap_add:
+         - NET_ADMIN
+         - NET_RAW
+      networks:
+         static-network:
+           ipv4_address: 192.168.0.8
+    client_zone1:
+       image: client
+       container_name: client-zone1
+       networks:
+         static-network:
+             ipv4_address: 192.168.1.8
+    client_zone2:
+       image: client
+       container_name: client-zone2
+       networks:
+         static-network:
+             ipv4_address: 192.168.2.8
+    client_zone3:
+       image: client
+       container_name: client-zone3
+       networks:
+         static-network:
+             ipv4_address: 192.168.3.8
+    client_zone4:
+       image: client
+       container_name: client-zone4
+       networks:
+         static-network:
+             ipv4_address: 192.168.4.8
+networks:
+  static-network:
+    ipam:
+      config:
+        - subnet: 192.168.0.0/16

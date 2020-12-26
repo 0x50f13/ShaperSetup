@@ -1,0 +1,68 @@
+# Build parameters
+GEOZONE1="192.168.1.0/24"
+GEOZONE2="192.168.2.0/24"
+GEOZONE3="192.168.3.0/24"
+GEOZONE4="192.168.4.0/24"
+SSH_PORT=22
+IF=eth0 # Interface/bridge for which setup will be done
+Q_TYPE=egress # Assuming we are serving some resource(use ingress if we are going to receive data)
+BANDWIDTH=10240 # Bandwidth in kbit/s. 
+USAGE="[all|fwall|tc]" 
+# Build script
+target_fwall(){
+   info "Set-up firewall"
+   exec iptables -A INPUT -s $GEOZONE1 -p icmp -j DROP
+   exec iptables -A INPUT -s $GEOZONE2 -p icmp -j DROP
+   exec iptables -A INPUT -s $GEOZONE3 -p icmp -j DROP
+   exec iptables -A INPUT -s $GEOZONE4 -p icmp -j DROP
+   # Assuming we have only one ssh port: 22(defined at $SSH_PORT)  
+   exec iptables -A INPUT -s $GEOZONE4 -p tcp -m tcp --dport $SSH_PORT -j DROP 
+   success "Done setting-up firewall"
+}
+
+target_tc(){
+   info "Set-up traffic control"
+   # Compute bandwidth 20% and 40%
+   bandwidth_20=$(($BANDWIDTH/5))
+   bandwidth_40=$((2 * $BANDWIDTH / 5))
+   # Add device root queue
+#   exec tc qdisc del dev $IF root
+   exec tc qdisc add dev $IF root handle 1: htb default 30
+   # Add queues classes for each zone
+   exec tc class add dev $IF parent 1:1 classid 1:10 htb rate ${bandwidth_40}kbit # zone 1
+   exec tc class add dev $IF parent 1:1 classid 1:20 htb rate ${bandwidth_20}kbit # zone 2
+   exec tc class add dev $IF parent 1:1 classid 1:30 htb rate ${bandwidth_20}kbit # zone 3
+   exec tc class add dev $IF parent 1:1 classid 1:40 htb rate ${bandwidth_20}kbit # zone 4
+   # Set-up filter
+   exec iptables -A PREROUTING -t mangle -i $IF -s $GEOZONE1 -j MARK --set-mark 1
+   exec iptables -A PREROUTING -t mangle -i $IF -s $GEOZONE3 -j MARK --set-mark 2
+   exec iptables -A PREROUTING -t mangle -i $IF -s $GEOZONE4 -j MARK --set-mark 3
+   exec "iptables -A PREROUTING -t mangle -i $IF -s $GEOZONE2 ! -p udp -j MARK --set-mark 4"
+   exec iptables -A PREROUTING -t mangle -i $IF -s $GEOZONE2 -p udp -j MARK --set-mark 5
+   
+   # Geozone 1
+   exec tc filter add dev $IF protocol ip parent 1: prio 1 handle 1 fw flowid 1:10
+   # Geozone 3
+   exec tc filter add dev $IF protocol ip parent 1: prio 1 handle 2 fw flowid 1:30
+   # Geozone 4
+   exec tc filter add dev $IF protocol ip parent 1: prio 1 handle 3 fw flowid 1:40
+   # Geozone 2: UDP should have priority over others protocols
+   exec tc filter add dev $IF protocol ip parent 1: prio 1 handle 5 fw flowid 1:20 # Max priority for UDP
+   exec tc filter add dev $IF protocol ip parent 1: prio 2 handle 4 fw flowid 1:20 # Reduce priority for other protocols
+   success "Traffic control setted up successfully"
+}
+target_server(){
+   require_command MeowMeow
+   info "Creating test file"
+   exec dd if=/dev/urandom of=/var/www/FatCat bs=16MB count=1 
+   exec MeowMeow
+}
+target_all(){
+   require_root
+   require_command tc
+   require_command iptables
+   target_fwall
+   target_tc
+   target_server
+}
+
