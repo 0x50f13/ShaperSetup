@@ -6,7 +6,7 @@
 * docker-compose
 * bash>=3.2
 * tput
-## Building & runing
+## Building & running
 ### Automatic
 Automatic build only was tested on Mac OS X(10.15.7).<br>
 ```
@@ -25,5 +25,5 @@ cd ../..
 docker-compose up
 ```
 
-### License
+## License
 Licensed under GNU/GPL 3.0 since open-source compenents are used from [ddos2](https://github.com/Andrewerr/ddos2).
